@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quản lý tài khoản người dùng</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+        :root {
+            --ink: #17212b;
+            --muted: #6b7785;
+            --line: #e2e8ee;
+            --surface: #ffffff;
+            --page: #f4f7f6;
+            --teal: #087f8c;
+            --teal-dark: #05616b;
+            --mint: #e4f5f0;
+            --red: #d9535d;
+            --red-soft: #fff0f0;
+            --green: #15845b;
+            --green-soft: #eaf8f0;
+            --shadow: 0 16px 45px rgba(28, 53, 63, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            background:
+                radial-gradient(circle at 92% 4%, rgba(117, 199, 181, 0.2), transparent 26rem),
+                linear-gradient(135deg, #f8faf9 0%, var(--page) 52%, #edf5f3 100%);
+        }
+
+        body > h1,
+        body > .box {
+            width: min(1180px, calc(100% - 56px));
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        body > h1 {
+            margin-top: 58px;
+            margin-bottom: 30px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 4vw, 3.25rem);
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            color: var(--ink);
+        }
+
+        body > h1::before {
+            content: 'WORKSPACE / TÀI KHOẢN';
+            display: block;
+            margin-bottom: 13px;
+            color: var(--teal);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+        }
+
+        .box {
+            margin-bottom: 22px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        input, select, button {
+            min-height: 44px;
+            padding: 10px 14px;
+            margin: 0 7px 0 0;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            color: var(--ink);
+            font: inherit;
+            background: #fbfcfc;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 15px rgba(27, 67, 73, 0.13);
+        }
+
+        input:focus, select:focus {
+            outline: 3px solid rgba(8, 127, 140, 0.13);
+            border-color: var(--teal);
+        }
+
+        .add {
+            background: var(--teal);
+            color: white;
+            border: none;
+        }
+
+        .lock {
+            background: var(--red-soft);
+            color: var(--red);
+            border: 1px solid #ffd7d7;
+        }
+
+        .lock:hover {
+            background: #ffe2e2;
+        }
+
+        .unlock {
+            background: var(--green-soft);
+            color: var(--green);
+            border: 1px solid #cceedd;
+        }
+
+        .delete {
+            background: #fff5f5;
+            color: #bd3543;
+            border: 1px solid #ffd9dc;
+        }
+
+        .delete:hover {
+            background: #ffe7e9;
+        }
+
+        .action-buttons {
+            position: relative;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            min-width: 190px;
+        }
+
+        .action-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            min-height: 38px;
+            margin: 0;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            color: var(--teal);
+            background: #f3faf8;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .action-toggle[aria-expanded="true"] {
+            color: #ffffff;
+            background: var(--teal);
+        }
+
+        .action-menu {
+            position: absolute;
+            z-index: 5;
+            top: calc(100% + 7px);
+            right: 0;
+            display: none;
+            min-width: 170px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(28, 53, 63, 0.16);
+        }
+
+        .action-menu.is-open {
+            display: grid;
+            gap: 7px;
+        }
+
+        .action-section {
+            display: grid;
+            gap: 7px;
+        }
+
+        .action-section + .action-section {
+            padding-top: 8px;
+            border-top: 1px solid var(--line);
+        }
+
+        .action-section-title {
+            padding: 2px 5px;
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .action-buttons button {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .action-menu button {
+            width: 100%;
+        }
+
+        .add:hover {
+            background: var(--teal-dark);
+        }
+
+        #search {
+            width: min(300px, 100%);
+        }
+
+        #formCreate {
+            display: none;
+            border-left: 4px solid var(--teal);
+        }
+
+        #formCreate h2 {
+            margin: 0 0 18px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+        }
+
+        .form-description {
+            margin: -8px 0 20px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field-group label {
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .field-group input,
+        .field-group select {
+            width: 100%;
+            margin: 0;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-actions button {
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface);
+        }
+
+        th, td {
+            padding: 17px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+
+        th {
+            color: #eaf5f3;
+            background: #21343b;
+            font-size: 0.77rem;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 0.94rem;
+        }
+
+        tbody tr {
+            transition: background 160ms ease;
+        }
+
+        tbody tr:hover {
+            background: #f2faf8;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        td:first-child {
+            width: 60px;
+            color: var(--teal);
+            font-weight: 700;
+        }
+
+        .active, .locked {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .active {
+            color: var(--green);
+        }
+
+        .locked {
+            color: var(--red);
+        }
+
+        @media (max-width: 760px) {
+            body > h1,
+            body > .box {
+                width: min(100% - 28px, 620px);
+            }
+
+            body > h1 {
+                margin-top: 34px;
+                margin-bottom: 22px;
+                font-size: 2.15rem;
+            }
+
+            .box {
+                padding: 17px;
+                border-radius: 14px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            input, select, button {
+                width: 100%;
+                margin: 0 0 10px;
+            }
+
+            .action-buttons {
+                min-width: 100%;
+            }
+
+            .action-buttons > button {
+                width: auto;
+                margin: 0;
+            }
+
+            .action-buttons > .action-toggle {
+                width: 38px;
+            }
+
+            #search {
+                width: 100%;
+            }
+
+            .box:has(table) {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 780px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Quản trị tài khoản người dùng</h1>
+
+    <!-- Tìm kiếm và lọc -->
+    <div class="box">
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Tìm tên, email, số điện thoại..."
+        >
+
+        <select id="roleFilter">
+            <option value="">Tất cả vai trò</option>
+            <option value="Quản trị hệ thống">Quản trị hệ thống</option>
+            <option value="Quản trị mạng">Quản trị mạng</option>
+            <option value="Quản trị cơ sở dữ liệu">Quản trị cơ sở dữ liệu</option>
+            <option value="Kỹ sư bảo mật hệ thống">Kỹ sư bảo mật hệ thống</option>
+            <option value="Quản trị máy chủ và Cloud">Quản trị máy chủ và Cloud</option>
+            <option value="Kỹ thuật viên IT">Kỹ thuật viên IT</option>
+            <option value="Nhân viên hỗ trợ kỹ thuật">Nhân viên hỗ trợ kỹ thuật</option>
+            <option value="Kiểm toán viên hệ thống">Kiểm toán viên hệ thống</option>
+        </select>
+
+        <select id="statusFilter">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Đang hoạt động">Đang hoạt động</option>
+            <option value="Đã khóa">Đã khóa</option>
+        </select>
+
+        <button class="add" onclick="showCreateForm()">
+            Tạo tài khoản
+        </button>
+
+    </div>
+
+
+    <!-- Form tạo tài khoản -->
+    <div class="box" id="formCreate">
+
+        <h2>Tạo tài khoản</h2>
+
+        <p class="form-description">
+            Tạo tài khoản và mở email kích hoạt kèm mật khẩu.
+        </p>
+
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="name">Họ và tên</label>
+                <input type="text" id="name" placeholder="Nguyễn Văn An" required>
+            </div>
+
+            <div class="field-group">
+                <label for="email">Email công việc</label>
+                <input type="email" id="email" placeholder="an@congty.vn" required>
+            </div>
+
+            <div class="field-group">
+                <label for="phone">Số điện thoại</label>
+                <input type="tel" id="phone" placeholder="0912345678" required>
+            </div>
+
+            <div class="field-group">
+                <label for="role">Vị trí hệ thống</label>
+                <select id="role">
+                    <option value="Quản trị hệ thống">Quản trị hệ thống</option>
+                    <option value="Quản trị mạng">Quản trị mạng</option>
+                    <option value="Quản trị cơ sở dữ liệu">Quản trị cơ sở dữ liệu</option>
+                    <option value="Kỹ sư bảo mật hệ thống">Kỹ sư bảo mật hệ thống</option>
+                    <option value="Quản trị máy chủ và Cloud">Quản trị máy chủ và Cloud</option>
+                    <option value="Kỹ thuật viên IT">Kỹ thuật viên IT</option>
+                    <option value="Nhân viên hỗ trợ kỹ thuật">Nhân viên hỗ trợ kỹ thuật</option>
+                    <option value="Kiểm toán viên hệ thống">Kiểm toán viên hệ thống</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <label for="password">Mật khẩu</label>
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Tối thiểu 8 ký tự"
+                    minlength="8"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="add" type="button" onclick="createAccount()">
+                Tạo tài khoản
+            </button>
+            <button type="button" onclick="closeCreateForm()">
+                Hủy
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- Danh sách tài khoản -->
+    <div class="box">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="userList">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+<script>
+
+    // Danh sách tài khoản mẫu
+
+    let users = [
+
+        {
+            id: 1,
+            name: "Nguyễn Văn An",
+            email: "an@gmail.com",
+            phone: "0912345678",
+            role: "Quản trị hệ thống",
+            status: "Đang hoạt động"
+        },
+
+        {
+            id: 2,
+            name: "Trần Văn Bình",
+            email: "binh@gmail.com",
+            phone: "0987654321",
+            role: "Quản trị cơ sở dữ liệu",
+            status: "Đang hoạt động"
+        },
+
+        {
+            id: 3,
+            name: "Lê Thị Hoa",
+            email: "hoa@gmail.com",
+            phone: "0901234567",
+            role: "Kỹ sư bảo mật hệ thống",
+            status: "Đã khóa"
+        }
+
+    ];
+
+
+    // Hiển thị danh sách
+
+    function displayUsers() {
+
+        const userList =
+            document.getElementById("userList");
+
+        const search =
+            document
+                .getElementById("search")
+                .value
+                .toLowerCase();
+
+        const role =
+            document
+                .getElementById("roleFilter")
+                .value;
+
+        const status =
+            document
+                .getElementById("statusFilter")
+                .value;
+
+
+        userList.innerHTML = "";
+
+
+        users.forEach(function(user) {
+
+            // Tìm kiếm
+
+            const searchOK =
+                user.name.toLowerCase().includes(search) ||
+                user.email.toLowerCase().includes(search) ||
+                user.phone.includes(search);
+
+
+            // Lọc vai trò
+
+            const roleOK =
+                role === "" ||
+                user.role === role;
+
+
+            // Lọc trạng thái
+
+            const statusOK =
+                status === "" ||
+                user.status === status;
+
+
+            if (
+                searchOK &&
+                roleOK &&
+                statusOK
+            ) {
+
+                let button = "";
+
+
+                if (
+                    user.status ===
+                    "Đang hoạt động"
+                ) {
+
+                    button = `
+                        <button
+                            class="lock"
+                            onclick="lockAccount(${user.id})"
+                        >
+                            Khóa tài khoản
+                        </button>
+                    `;
+
+                } else {
+
+                    button = `
+                        <button
+                            class="unlock"
+                            onclick="unlockAccount(${user.id})"
+                        >
+                            Mở khóa
+                        </button>
+                    `;
+
+                }
+
+
+                let statusClass =
+                    user.status ===
+                    "Đang hoạt động"
+                    ? "active"
+                    : "locked";
+
+
+                userList.innerHTML += `
+
+                    <tr>
+
+                        <td>${user.id}</td>
+
+                        <td>${user.name}</td>
+
+                        <td>${user.email}</td>
+
+                        <td>${user.phone}</td>
+
+                        <td>${user.role}</td>
+
+                        <td class="${statusClass}">
+                            ${user.status}
+                        </td>
+
+                        <td>
+                            <div class="action-buttons">
+                                ${button}
+                                <button
+                                    class="action-toggle"
+                                    type="button"
+                                    aria-expanded="false"
+                                    aria-label="Mở thao tác cho ${user.name}"
+                                    onclick="toggleActionMenu(this)"
+                                >
+                                    &#9662;
+                                </button>
+                                <div class="action-menu">
+                                    <div class="action-section">
+                                        <div class="action-section-title">Thao tác</div>
+                                        <button
+                                            class="delete"
+                                            onclick="deleteAccount(${user.id})"
+                                        >
+                                            Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+        });
+
+    }
+
+
+    // Hiện form tạo tài khoản
+
+    function showCreateForm() {
+
+        document.getElementById("formCreate")
+            .style.display = "block";
+
+    }
+
+
+    // Đóng form
+
+    function closeCreateForm() {
+
+        document.getElementById("formCreate")
+            .style.display = "none";
+
+    }
+
+
+    // Mở email kích hoạt đã điền sẵn trong Gmail
+
+    function sendActivationEmail(name, email, role, password) {
+
+        const subject =
+            "Kích hoạt tài khoản quản trị hệ thống";
+
+        const body =
+            "Xin chào " + name + ",\n\n" +
+            "Tài khoản quản trị hệ thống của bạn đã được tạo.\n\n" +
+            "Thông tin đăng nhập:\n" +
+            "- Email: " + email + "\n" +
+            "- Vị trí: " + role + "\n" +
+            "- Mật khẩu: " + password + "\n\n" +
+            "Vui lòng đăng nhập và đổi mật khẩu sau lần sử dụng đầu tiên.\n\n" +
+            "Trân trọng.\nBộ phận Quản trị hệ thống";
+
+        const gmailUrl =
+            "https://mail.google.com/mail/?view=cm&fs=1" +
+            "&to=" + encodeURIComponent(email) +
+            "&su=" + encodeURIComponent(subject) +
+            "&body=" + encodeURIComponent(body);
+
+        const mailWindow =
+            window.open(gmailUrl, "_blank");
+
+        if (!mailWindow) {
+
+            window.location.href =
+                "mailto:" + encodeURIComponent(email) +
+                "?subject=" + encodeURIComponent(subject) +
+                "&body=" + encodeURIComponent(body);
+
+        }
+
+        return body;
+
+    }
+
+
+    // Tạo tài khoản
+
+    function createAccount() {
+
+        const name =
+            document.getElementById("name").value;
+
+        const email =
+            document.getElementById("email").value;
+
+        const phone =
+            document.getElementById("phone").value;
+
+        const password =
+            document.getElementById("password").value;
+
+        const role =
+            document.getElementById("role").value;
+
+
+        if (
+            name === "" ||
+            email === "" ||
+            phone === "" ||
+            password === ""
+        ) {
+
+            alert(
+                "Vui lòng nhập đầy đủ thông tin!"
+            );
+
+            return;
+
+        }
+
+
+        if (password.length < 8) {
+
+            alert(
+                "Mật khẩu phải có ít nhất 8 ký tự!"
+            );
+
+            return;
+
+        }
+
+
+        // Kiểm tra email trùng
+
+        const exists =
+            users.some(function(user) {
+
+                return user.email === email;
+
+            });
+
+
+        if (exists) {
+
+            alert(
+                "Email đã tồn tại!"
+            );
+
+            return;
+
+        }
+
+
+        const newUser = {
+
+            id:
+                users.length === 0
+                    ? 1
+                    : Math.max.apply(
+                        null,
+                        users.map(function(user) {
+                            return user.id;
+                        })
+                    ) + 1,
+
+            name: name,
+
+            email: email,
+
+            phone: phone,
+
+            role: role,
+
+            status: "Đang hoạt động"
+
+        };
+
+
+        users.push(newUser);
+
+
+        sendActivationEmail(
+            name,
+            email,
+            role,
+            password
+        );
+
+        alert(
+            "Tạo tài khoản thành công!\n\n" +
+            "Gmail đã được mở với email kích hoạt và mật khẩu.\n" +
+            "Hãy kiểm tra lại nội dung rồi bấm Gửi."
+        );
+
+
+        // Xóa dữ liệu form
+
+        document.getElementById("name").value = "";
+
+        document.getElementById("email").value = "";
+
+        document.getElementById("phone").value = "";
+
+        document.getElementById("password").value = "";
+
+
+        closeCreateForm();
+
+        displayUsers();
+
+    }
+
+
+    // Khóa tài khoản
+
+    function lockAccount(id) {
+
+        const user =
+            users.find(function(user) {
+
+                return user.id === id;
+
+            });
+
+
+        if (user) {
+
+            user.status = "Đã khóa";
+
+            alert(
+                "Đã khóa tài khoản: " +
+                user.name
+            );
+
+            displayUsers();
+
+        }
+
+    }
+
+
+    // Mở khóa tài khoản
+
+    function unlockAccount(id) {
+
+        const user =
+            users.find(function(user) {
+
+                return user.id === id;
+
+            });
+
+
+        if (user) {
+
+            user.status = "Đang hoạt động";
+
+            alert(
+                "Đã mở khóa tài khoản: " +
+                user.name
+            );
+
+            displayUsers();
+
+        }
+
+    }
+
+
+    // Mở hoặc đóng menu thao tác của một tài khoản
+
+    function toggleActionMenu(toggleButton) {
+
+        const menu =
+            toggleButton.nextElementSibling;
+
+        const isOpen =
+            menu.classList.toggle("is-open");
+
+        toggleButton.setAttribute(
+            "aria-expanded",
+            String(isOpen)
+        );
+
+        toggleButton.innerHTML =
+            isOpen ? "&#9652;" : "&#9662;";
+
+    }
+
+
+    // Xóa tài khoản khỏi danh sách
+
+    function deleteAccount(id) {
+
+        const user =
+            users.find(function(user) {
+
+                return user.id === id;
+
+            });
+
+
+        if (!user) {
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                "Bạn có chắc muốn xóa tài khoản \"" +
+                user.name +
+                "\" không?\n\nThao tác này không thể hoàn tác."
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        users = users.filter(function(account) {
+
+            return account.id !== id;
+
+        });
+
+
+        displayUsers();
+
+        alert(
+            "Đã xóa tài khoản: " + user.name
+        );
+
+    }
+
+
+    // Tự động tìm kiếm khi nhập
+
+    document
+        .getElementById("search")
+        .addEventListener(
+            "input",
+            displayUsers
+        );
+
+
+    // Lọc vai trò
+
+    document
+        .getElementById("roleFilter")
+        .addEventListener(
+            "change",
+            displayUsers
+        );
+
+
+    // Lọc trạng thái
+
+    document
+        .getElementById("statusFilter")
+        .addEventListener(
+            "change",
+            displayUsers
+        );
+
+
+    // Chạy lần đầu
+
+    displayUsers();
+
+</script>
+
+</body>
+</html>
